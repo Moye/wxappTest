@@ -1,8 +1,8 @@
 {
   "pages": [
     "pages/start/start",
-    "pages/index/index",
     "pages/picture/picture",
+    "pages/index/index",
     "pages/addCgi/addCgi",
     "pages/chat/chat",
     "pages/mine/mine",

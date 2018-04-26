@@ -10,6 +10,7 @@ var chatListData = [];
 //
 var speakerInterval;
 var imgTmp;
+var indexSet;
 
 Page({
   data: {
@@ -38,17 +39,47 @@ Page({
     contactFlag: true,
     imgUrl: null,
 
+    /////////
     // 印刷体识别
     ocrImgUrl: '',
     ocrResult: [],
     showOcrResult: false,
 
-    voice: ''
+    // 身份证识别
+    imgUrl: '',
+    idCardInfo: {},
+    showResult: false,
+
+    //名片识别
+    idImgUrl: '',
+    idInfo: [],
+    showidResult: false,
+
+    //识别图片内容信息，并以标签的形式显示
+    conImgUrl: '',
+    conResult: [],
+    showConResult: false,
+
+    //银行卡识别
+    cardImgUrl: '',
+    cardResult: [],
+    showCardInfo: false,
+
+    //语音合成
+    recordUrl: '',
+    showRecord: false,
+
+    textRec: '',
+    /////////
+
+    voice: '',
+
   },
 
   onLoad: function (options) {
     that = this;
     imgTmp = options.imgUrl;
+    indexSet = options.indexSet;
     app.getUserInfo(function (userInfo) {
       var aUrl = userInfo.avatarUrl;
       if (aUrl != null) {
@@ -59,6 +90,16 @@ Page({
       }
     });
     that.addChat('', 'p');
+
+    if(indexSet){
+      if (indexSet == 'indexSet1_ocr'){
+        that.doWordIndentify();
+      } else if (indexSet == 'indexSet2_rec'){
+        that.doTxtToRecord();
+      } else if (indexSet == 'indexSet3_con'){
+        that.doConIndentity();
+      }
+    }
   },
 
   //打开相机,实际是回到主页面
@@ -70,21 +111,8 @@ Page({
 
   // 选择图片
   checkPic: function () {
-    var that = this;
-    // 选择图片
-    wx.chooseImage({
-      count: 1,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: function (res) {
-        var filePath = res.tempFilePaths[0]
-        that.setData({
-          imgTmp: filePath
-        });
-      },
-      fail: function (e) {
-        console.error(e)
-      }
+    wx.navigateTo({
+      url: '../index/index?tmp=picTmp',
     })
   },
 
@@ -104,14 +132,23 @@ Page({
     })
   },
 
+  //一次性设置全 false
+  setDa(that){
+    that.setData({
+      showOcrResult: false,
+      showResult: false,
+      showidResult: false,
+      showConResult: false,
+      showCardInfo:false,
+      showRecord:false
+    })
+  },
 
-  //图片标签识别
+  //印刷体识别
   doWordIndentify: function () {
     let that = this
 
-    that.setData({
-      showOcrResult: false
-    })
+    that.setDa(that);
 
     // 选择图片和上传图片
     this._chooseImgAndUpload(
@@ -121,11 +158,150 @@ Page({
           ocrImgUrl: filePath
         })
       },
-      config.service.ciUrl + '?action=idContent',
+      config.service.ciUrl + '?action=general',
       // 调用成功
       function (res) {
         console.log(res)
         util.showSuccess('识别成功')
+        var data = JSON.parse(res.data)
+
+        if (data.code !== 0) {
+          util.showModel('识别失败，请重试或更换识别方式')
+          return
+        }
+        var info = data.data
+        if (info.code !== 0) {
+          util.showModel('识别失败，请重试或更换识别方式')
+          return
+        }
+        that.setData({
+          showOcrResult: true,
+          ocrResult: info.data.items
+        })
+        that.addChat('<<<', 'l');
+      },
+      // 调用失败
+      function (e) {
+        console.log(e)
+        util.showModel('识别失败，请重试或更换识别方式')
+      }
+    );
+  },
+
+  //身份证识别
+  doIdCardIdentify: function () {
+    var that = this
+    that.setDa(that);
+
+    // 选择图片和上传图片
+    this._chooseImgAndUpload(
+      // 上传图片之前
+      function (filePath) {
+        that.setData({
+          imgUrl: filePath
+        })
+      },
+      config.service.ciUrl + '?action=idcard',
+      // 调用成功
+      function (res) {
+        util.showSuccess('识别成功')
+        var data = JSON.parse(res.data)
+
+        if (data.code !== 0) {
+          util.showModel('识别失败')
+          return
+        }
+
+        var info = data.data[0]
+
+        if (info.code !== 0) {
+          util.showModel('识别失败' + info.message)
+          return
+        }
+
+        that.setData({
+          showResult: true,
+          idCardInfo: info.data
+        })
+        that.addChat('<<<', 'l');
+      },
+      // 调用失败
+      function (e) {
+        util.showModel('识别失败' + e.message)
+      }
+    )
+  },
+  
+  //名片识别
+  doIdIndentify: function () {
+    var that = this
+
+    that.setDa(that);
+
+    // 选择图片和上传图片
+    this._chooseImgAndUpload(
+      // 上传图片之前
+      function (filePath) {
+        that.setData({
+          idImgUrl: filePath
+        })
+      },
+
+      config.service.ciUrl + '?action=idName',
+
+      // 调用成功
+      function (res) {
+        util.showSuccess('识别成功')
+        console.log(res.data)
+        var data = JSON.parse(res.data)
+
+        if (data.code !== 0) {
+          util.showModel('识别失败')
+          return
+        }
+
+        var info = data.data[0]
+        console.log('data: ' + info)
+
+        if (info.code !== 0) {
+          util.showModel('识别失败' + info.message)
+          return
+        }
+
+        that.setData({
+          showidResult: true,
+          idInfo: info.data
+        })
+        that.addChat('<<<', 'l');
+      },
+      // 调用失败
+      function (e) {
+        util.showModel('识别失败' + e.message)
+      }
+    )
+  },
+
+  //识别图片内容信息，并以标签的形式显示
+  doConIndentity: function () {
+    var that = this
+
+    that.setDa(that);
+
+    // 选择图片和上传图片
+    this._chooseImgAndUpload(
+      // 上传图片之前
+      function (filePath) {
+        that.setData({
+          conImgUrl: filePath
+        })
+      },
+
+      config.service.ciUrl + '?action=idContent',
+
+      // 调用成功
+      function (res) {
+        util.showSuccess('识别成功')
+        console.log('res: ' + res.data)
         var data = JSON.parse(res.data)
 
         if (data.code !== 0) {
@@ -137,9 +313,10 @@ Page({
           util.showModel('识别失败' + info.message)
           return
         }
+
         that.setData({
-          showOcrResult: true,
-          ocrResult: info.tags
+          showConResult: true,
+          conResult: info.tags
         })
         that.addChat('<<<', 'l');
       },
@@ -148,7 +325,74 @@ Page({
         console.log(e)
         util.showModel('识别失败' + e.message)
       }
-    );
+    )
+  },
+
+  //银行卡识别
+  doCardIndentity: function () {
+    var that = this
+
+    that.setDa(that);
+
+    // 选择图片和上传图片
+    this._chooseImgAndUpload(
+      // 上传图片之前
+      function (filePath) {
+        that.setData({
+          cardImgUrl: filePath
+        })
+      },
+
+      config.service.ciUrl + '?action=card',
+
+      // 调用成功
+      function (res) {
+        util.showSuccess('识别成功')
+        console.log('res: ' + res.data)
+        var data = JSON.parse(res.data)
+
+        if (data.code !== 0) {
+          util.showModel('识别失败')
+          return
+        }
+        var info = data.data
+        if (info.code !== 0) {
+          util.showModel('识别失败' + info.message)
+          return
+        }
+
+        that.setData({
+          showCardInfo: true,
+          cardResult: info.data.items
+        })
+        that.addChat('<<<', 'l');
+      },
+      // 调用失败
+      function (e) {
+        console.log(e)
+        util.showModel('识别失败' + e.message)
+      }
+    )
+  },
+
+  //语音合成
+  doTxtToRecord: function(){
+    var that = this
+
+    that.setDa(that);
+    wx.request({
+      url: config.service.ciUrl + '?action=record',
+      data:{
+        // text: that.data.textRec
+        text: '你好啊你好啊'
+      },
+      success: function(res){
+        console.log(res.data)
+      },
+      fail:function(err){
+        console.log('record fail: ' + err);
+      }
+    })
   },
 
   /**
@@ -159,8 +403,8 @@ Page({
    */
   _chooseImgAndUpload(beforUpload, url, success, fail) {
     var filePath = imgTmp;
-    console.log('img: ' + filePath);
     beforUpload(filePath)
+    util.showBusy('正在识别')
     // 上传图片
     wx.uploadFile({
       url: url,
@@ -169,8 +413,6 @@ Page({
       success: success,
       fail: fail
     })
-    console.log('url: ' + url);
-    console.log('file: ' + filePath);
   },
 
   onReady: function () {

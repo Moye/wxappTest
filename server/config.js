@@ -44,7 +44,12 @@ const CONF = {
     // 腾讯云相关配置可以查看云 API 秘钥控制台：https://console.qcloud.com/capi
     qcloudAppId: '1256427787',
     qcloudSecretId: 'AKIDiOZheQPSisx0sZeOXWK0YuJbieP0lfia',
-    qcloudSecretKey: 'qZ8f6PXUFtMekfPyRjq3CBzc4LTjy64r'
+    qcloudSecretKey: 'qZ8f6PXUFtMekfPyRjq3CBzc4LTjy64r',
+
+    //腾讯优图AI
+    aiAppId: '10127474',
+    aiSecretId: 'AKID9B2xyvIIuQlvtgkg4yxoUyGMWXM9pKen',
+    aiSecretKey: '73lXO8qX6TefifgAWlwvkOsFRRenpgLt'
 }
 
 module.exports = CONF

@@ -14,6 +14,8 @@ Page({
     device: 'back',
     //设置摄像头是否打开 
     cameraOn: true,
+    //设置选用什么识别方式
+    indexSet: ''
   },
 
   /**
@@ -23,7 +25,6 @@ Page({
     this.setData({
       cameraOn: true
     })
-    console.log("show cameraOn: " + this.data.cameraOn)
   },
 
   /**
@@ -33,11 +34,20 @@ Page({
     this.setData({
       cameraOn: false
     })
-    console.log("hide cameraOn: " + this.data.cameraOn)
+  },
+
+  onLoad: function (options){
+    this.setData({
+      indexSet: ''
+    })
+    if(options.tmp){
+      this.doUpload();
+    }
   },
 
   //拍照接口
   takePhoto: function () {
+    let that = this;
     const ctx = wx.createCameraContext();
     ctx.takePhoto({
       quality: 'high',
@@ -46,7 +56,7 @@ Page({
           src: res.tempImagePath,
         });
         wx.navigateTo({
-          url: '../chat/chat?imgUrl=' + res.tempImagePath,
+          url: '../chat/chat?imgUrl=' + res.tempImagePath + '&indexSet=' + that.data.indexSet,
         })
       }
     });
@@ -70,7 +80,7 @@ Page({
         var filePath = res.tempFilePaths[0]
         //跳转到聊天室页面
         wx.navigateTo({
-          url: '../chat/chat?imgUrl=' + filePath,
+          url: '../chat/chat?imgUrl=' + filePath + '&indexSet=' + that.data.indexSet,
         })
       },
       fail: function (e) {
@@ -105,6 +115,22 @@ Page({
         device: 'back'
       })
     }
+  },
+
+  indexSet1: function(){
+    this.setData({
+      indexSet: 'indexSet1_ocr'
+    })
+  },
+  indexSet2:function(){
+    this.setData({
+      indexSet: 'indexSet2_rec'
+    })
+  },
+  indexSet3:function(){
+    this.setData({
+      indexSet: 'indexSet3_con'
+    })
   }
 
 })
